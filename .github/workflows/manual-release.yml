@@ -1,0 +1,27 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_id:
+        description: 'Set the desired version id (e.g. 1.2.3dev)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Bump and create release
+        id: bump
+        uses: jianlins/check_bump_version@v1
+        with:
+          bump-type: 'patch' # or 'minor'/'major'
+          current-version: ${{ github.event.inputs.version_id }}
+
+      - name: Show bumped version
+        run: |
+            echo "Release version: ${{ steps.bump.outputs.version }}"
