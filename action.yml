@@ -12,14 +12,8 @@ outputs:
   version:
     description: 'The bumped version string'
 runs:
-  using: 'composite'
-  steps:
-    - name: Install dependencies
-      run: npm install
-      shell: bash
-    - name: Run bumper
-      run: node index.js
-      shell: bash
+  using: 'node20'
+  main: 'index.js'
 branding:
   icon: 'tag'
   color: 'blue'

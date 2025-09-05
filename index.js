@@ -1,5 +1,46 @@
 // index.js
-const axios = require('axios');
+const https = require('https');
+
+/**
+ * Make HTTP request using Node.js built-in https module
+ * @param {string} url URL to request
+ * @param {object} options Request options
+ * @returns {Promise<any>} Response data
+ */
+function makeRequest(url, options = {}) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(url, {
+      method: options.method || 'GET',
+      headers: {
+        'User-Agent': 'GitHub-Release-Version-Bumper',
+        ...options.headers
+      }
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 400) {
+          reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+          return;
+        }
+        try {
+          const parsed = JSON.parse(data);
+          resolve(parsed);
+        } catch (err) {
+          reject(new Error(`Failed to parse JSON: ${err.message}`));
+        }
+      });
+    });
+    
+    req.on('error', reject);
+    
+    if (options.data) {
+      req.write(JSON.stringify(options.data));
+    }
+    
+    req.end();
+  });
+}
 
 /**
  * Get the latest release version of the specified repository
@@ -11,8 +52,8 @@ const axios = require('axios');
 async function getLatestReleaseVersion(owner, repo, token = '') {
   const url = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
   const headers = token ? { Authorization: `token ${token}` } : {};
-  const response = await axios.get(url, { headers });
-  return response.data.tag_name;
+  const response = await makeRequest(url, { headers });
+  return response.tag_name;
 }
 
 /**
@@ -25,8 +66,8 @@ async function getLatestReleaseVersion(owner, repo, token = '') {
 async function getAllReleaseTags(owner, repo, token = '') {
   const url = `https://api.github.com/repos/${owner}/${repo}/releases`;
   const headers = token ? { Authorization: `token ${token}` } : {};
-  const response = await axios.get(url, { headers });
-  return response.data.map(r => r.tag_name);
+  const response = await makeRequest(url, { headers });
+  return response.map(r => r.tag_name);
 }
 
 /**
@@ -102,7 +143,10 @@ function bumpVersion(version, bumpType) {
  */
 async function createRelease(owner, repo, newVersion, token) {
   const url = `https://api.github.com/repos/${owner}/${repo}/releases`;
-  const headers = { Authorization: `token ${token}` };
+  const headers = { 
+    Authorization: `token ${token}`,
+    'Content-Type': 'application/json'
+  };
   const data = {
     tag_name: newVersion,
     name: newVersion,
@@ -110,8 +154,8 @@ async function createRelease(owner, repo, newVersion, token) {
     draft: false,
     prerelease: false
   };
-  const response = await axios.post(url, data, { headers });
-  return response.data.html_url;
+  const response = await makeRequest(url, { method: 'POST', headers, data });
+  return response.html_url;
 }
 
 // Example usage
@@ -137,7 +181,7 @@ async function main() {
     try {
       allTags = await getAllReleaseTags(owner, repo, token);
     } catch (err) {
-      if (err.response && err.response.status === 404) {
+      if (err.message && err.message.includes('404')) {
         noRelease = true;
         allTags = [];
       } else {
