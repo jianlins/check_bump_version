@@ -8,12 +8,18 @@ inputs:
   current-version:
     description: 'Desired version to use or bump'
     required: false
-runs:
-  using: 'node12'
-  main: 'index.js'
 outputs:
   version:
     description: 'The bumped version string'
+runs:
+  using: 'composite'
+  steps:
+    - name: Install dependencies
+      run: npm install
+      shell: bash
+    - name: Run bumper
+      run: node index.js
+      shell: bash
 branding:
   icon: 'tag'
   color: 'blue'
