@@ -1,3 +1,18 @@
+#### 在工作流中使用生成的版本号
+
+生成的版本号会作为输出变量 `version` 提供。你可以在后续步骤中通过 `${{ steps.<step_id>.outputs.version }}` 引用。例如：
+
+```yaml
+- name: 检查并提升版本
+  id: bump
+  uses: jianlins/check_bump_version@v1
+  with:
+    bump-type: 'patch'
+    current-version: '0.0.1'
+
+- name: 使用生成的版本号
+  run: echo "生成的版本号是 ${{ steps.bump.outputs.version }}"
+```
 # GitHub Release Version Checker & Bumper
 
 本项目可自动检查 GitHub release 版本并提升版本号，不涉及源码更新。

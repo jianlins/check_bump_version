@@ -22,6 +22,21 @@ This project automatically checks GitHub release versions and bumps the version 
 3. Run the action to automatically check and bump the version.
 
 ### Example: Using in a GitHub Actions Workflow
+#### Using the bumped version in your workflow
+
+The bumped version is available as an output variable named `version`. You can reference it in subsequent steps using `${{ steps.<step_id>.outputs.version }}`. For example:
+
+```yaml
+- name: Check and bump version
+  id: bump
+  uses: jianlins/check_bump_version@v1
+  with:
+    bump-type: 'patch'
+    current-version: '0.0.1'
+
+- name: Use bumped version
+  run: echo "Bumped version is ${{ steps.bump.outputs.version }}"
+```
 
 ```yaml
 name: Check and Bump Version
