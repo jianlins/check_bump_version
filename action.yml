@@ -1,0 +1,19 @@
+name: 'GitHub Release Version Bumper'
+description: 'Automatically checks and bumps GitHub release versions.'
+inputs:
+  bump-type:
+    description: 'Which part of the version to bump (patch, minor, major)'
+    required: true
+    default: 'patch'
+  current-version:
+    description: 'Desired version to use or bump'
+    required: false
+runs:
+  using: 'node12'
+  main: 'index.js'
+outputs:
+  version:
+    description: 'The bumped version string'
+branding:
+  icon: 'tag'
+  color: 'blue'
