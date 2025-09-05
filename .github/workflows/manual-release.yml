@@ -1,9 +1,13 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch:
+    inputs:
+      version_id:
+        description: 'Set the desired version id (e.g. 1.2.3dev)'
+        required: true
+        default: 'v1.0.0'
+
 
 jobs:
   create_release:
