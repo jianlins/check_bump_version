@@ -4,7 +4,9 @@ on:
   push:
     tags:
       - '*'
-
+permissions:
+  contents: read
+  
 jobs:
   create_release:
     if: github.ref != 'refs/tags/v1'
