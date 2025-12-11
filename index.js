@@ -269,8 +269,17 @@ async function main() {
       console.log(`New bumped version: ${chosenVersion}`);
     }
 
-    // Construct the full release name with prefix and suffix
-    const fullReleaseName = constructReleaseName(chosenVersion, prefix, suffix);
+    // Keep bumping until we find a version that doesn't exist
+    let fullReleaseName = constructReleaseName(chosenVersion, prefix, suffix);
+    const existingTags = new Set(allTags);
+    
+    while (existingTags.has(fullReleaseName)) {
+      console.log(`Version ${chosenVersion} (release name: ${fullReleaseName}) already exists, bumping again...`);
+      chosenVersion = bumpVersion(chosenVersion, bumpType);
+      fullReleaseName = constructReleaseName(chosenVersion, prefix, suffix);
+    }
+    
+    console.log(`Final version: ${chosenVersion} (release name: ${fullReleaseName})`);
 
     // Output the chosen version for GitHub Actions (output the version ID, not the full release name)
     if (process.env.GITHUB_OUTPUT) {
