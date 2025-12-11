@@ -158,6 +158,41 @@ async function createRelease(owner, repo, newVersion, token) {
   return response.html_url;
 }
 
+/**
+ * Extract version ID from a release tag by removing prefix and suffix
+ * @param {string} tag Release tag (e.g., "cuda_1.3.0-beta")
+ * @param {string} prefix Prefix to remove (e.g., "cuda_")
+ * @param {string} suffix Suffix to remove (e.g., "-beta")
+ * @returns {string|null} Version ID or null if tag doesn't match pattern
+ */
+function extractVersionFromTag(tag, prefix, suffix) {
+  if (prefix && !tag.startsWith(prefix)) {
+    return null;
+  }
+  if (suffix && !tag.endsWith(suffix)) {
+    return null;
+  }
+  let version = tag;
+  if (prefix) {
+    version = version.slice(prefix.length);
+  }
+  if (suffix) {
+    version = version.slice(0, -suffix.length);
+  }
+  return version;
+}
+
+/**
+ * Construct full release name from version ID with prefix and suffix
+ * @param {string} version Version ID (e.g., "1.3.0")
+ * @param {string} prefix Prefix to add (e.g., "cuda_")
+ * @param {string} suffix Suffix to add (e.g., "-beta")
+ * @returns {string} Full release name (e.g., "cuda_1.3.0-beta")
+ */
+function constructReleaseName(version, prefix, suffix) {
+  return `${prefix}${version}${suffix}`;
+}
+
 // Example usage
 async function main() {
   let owner = process.env.GITHUB_OWNER;
@@ -173,6 +208,9 @@ async function main() {
   const token = process.env.GITHUB_TOKEN || '';
   // Support both SET_VERSION and INPUT_CURRENT-VERSION (from workflow input)
   const setVersion = process.env.SET_VERSION || process.env['INPUT_CURRENT-VERSION'];
+  // Get prefix and suffix parameters
+  const prefix = process.env.PREFIX || process.env['INPUT_PREFIX'] || '';
+  const suffix = process.env.SUFFIX || process.env['INPUT_SUFFIX'] || '';
 
   try {
     let chosenVersion;
@@ -188,17 +226,27 @@ async function main() {
         throw err;
       }
     }
+
+    // Extract version IDs from tags that match the prefix/suffix pattern
+    const matchingVersions = allTags
+      .map(tag => ({ tag, version: extractVersionFromTag(tag, prefix, suffix) }))
+      .filter(item => item.version !== null);
+
     if (setVersion) {
-      if (!allTags.includes(setVersion)) {
+      // Check if the full release name (prefix + setVersion + suffix) exists
+      const fullSetVersionName = constructReleaseName(setVersion, prefix, suffix);
+      const existingMatch = matchingVersions.find(item => item.version === setVersion);
+      
+      if (!existingMatch) {
         chosenVersion = setVersion;
-        console.log(`SET_VERSION ${setVersion} not found in releases, using it.`);
+        console.log(`SET_VERSION ${setVersion} (release name: ${fullSetVersionName}) not found in releases, using it.`);
       } else {
         // bump from setVersion
         chosenVersion = bumpVersion(setVersion, bumpType);
-        console.log(`SET_VERSION ${setVersion} already exists, bumped to ${chosenVersion}.`);
+        console.log(`SET_VERSION ${setVersion} already exists as ${existingMatch.tag}, bumped to ${chosenVersion}.`);
       }
-    } else if (noRelease || allTags.length === 0) {
-      // No releases exist, use sensible default
+    } else if (noRelease || matchingVersions.length === 0) {
+      // No releases exist (or none match the prefix/suffix pattern), use sensible default
       if (bumpType === 'major') {
         chosenVersion = '1.0.0';
       } else if (bumpType === 'minor') {
@@ -206,16 +254,25 @@ async function main() {
       } else {
         chosenVersion = '0.0.1';
       }
-      console.log(`No releases found, using default version: ${chosenVersion}`);
+      if (prefix || suffix) {
+        console.log(`No releases found matching pattern "${prefix}<version>${suffix}", using default version: ${chosenVersion}`);
+      } else {
+        console.log(`No releases found, using default version: ${chosenVersion}`);
+      }
     } else {
-      // fallback to latest release
-      const latestVersion = await getLatestReleaseVersion(owner, repo, token);
+      // Find the latest release that matches the prefix/suffix pattern
+      // The first matching tag from getAllReleaseTags should be the latest (API returns in order)
+      const latestMatch = matchingVersions[0];
+      const latestVersion = latestMatch.version;
       chosenVersion = bumpVersion(latestVersion, bumpType);
-      console.log(`Latest release version: ${latestVersion}`);
+      console.log(`Latest matching release: ${latestMatch.tag} (version: ${latestVersion})`);
       console.log(`New bumped version: ${chosenVersion}`);
     }
 
-    // Output the chosen version for GitHub Actions
+    // Construct the full release name with prefix and suffix
+    const fullReleaseName = constructReleaseName(chosenVersion, prefix, suffix);
+
+    // Output the chosen version for GitHub Actions (output the version ID, not the full release name)
     if (process.env.GITHUB_OUTPUT) {
       const fs = require('fs');
       fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${chosenVersion}\n`);
@@ -225,10 +282,16 @@ async function main() {
     }
 
     if (token) {
-      const releaseUrl = await createRelease(owner, repo, chosenVersion, token);
+      const releaseUrl = await createRelease(owner, repo, fullReleaseName, token);
       console.log(`New release created: ${releaseUrl}`);
+      if (prefix || suffix) {
+        console.log(`Release name: ${fullReleaseName}, Version ID: ${chosenVersion}`);
+      }
     } else {
       console.log('GitHub Token not provided, release not created automatically.');
+      if (prefix || suffix) {
+        console.log(`Would create release: ${fullReleaseName}, Version ID: ${chosenVersion}`);
+      }
     }
   } catch (err) {
     console.error('Failed to get or create release:', err.message);

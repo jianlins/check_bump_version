@@ -8,6 +8,14 @@ inputs:
   current-version:
     description: 'Desired version to use or bump'
     required: false
+  prefix:
+    description: 'Prefix for the release name (e.g., "cuda_" for "cuda_1.3.0")'
+    required: false
+    default: ''
+  suffix:
+    description: 'Suffix for the release name (e.g., "-beta" for "1.3.0-beta")'
+    required: false
+    default: ''
 outputs:
   version:
     description: 'The bumped version string'
