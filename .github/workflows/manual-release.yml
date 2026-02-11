@@ -22,3 +22,4 @@ jobs:
           allowUpdates: true
           draft: true
           generateReleaseNotes: true
+          makeLatest: true
