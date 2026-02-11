@@ -16,6 +16,10 @@ inputs:
     description: 'Suffix for the release name (e.g., "-beta" for "1.3.0-beta")'
     required: false
     default: ''
+  create-release:
+    description: 'Whether to create a GitHub release after bumping version (true/false)'
+    required: false
+    default: 'true'
 outputs:
   version:
     description: 'The bumped version string'

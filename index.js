@@ -214,6 +214,9 @@ async function main() {
   // Get prefix and suffix parameters
   const prefix = process.env.PREFIX || process.env['INPUT_PREFIX'] || '';
   const suffix = process.env.SUFFIX || process.env['INPUT_SUFFIX'] || '';
+  // Get create-release parameter (defaults to 'true')
+  const createReleaseInput = process.env.CREATE_RELEASE || process.env['INPUT_CREATE-RELEASE'] || 'true';
+  const shouldCreateRelease = createReleaseInput.toLowerCase() === 'true';
 
   try {
     let chosenVersion;
