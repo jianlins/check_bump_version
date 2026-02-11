@@ -20,6 +20,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          draft: true
+          draft: false
           generateReleaseNotes: true
           makeLatest: true

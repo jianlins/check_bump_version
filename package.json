@@ -1,6 +1,6 @@
 {
   "name": "github-release-version-bumper",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "自动检查 GitHub release 版本并自动提升版本号的工具",
   "main": "index.js",
   "scripts": {
