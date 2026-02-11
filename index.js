@@ -50,7 +50,8 @@ function makeRequest(url, options = {}) {
  * @returns {Promise<string>} Latest release version tag
  */
 async function getLatestReleaseVersion(owner, repo, token = '') {
-  const url = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
+  const apiUrl = process.env.GITHUB_API_URL || 'https://api.github.com';
+  const url = `${apiUrl}/repos/${owner}/${repo}/releases/latest`;
   const headers = token ? { Authorization: `token ${token}` } : {};
   const response = await makeRequest(url, { headers });
   return response.tag_name;
@@ -64,7 +65,8 @@ async function getLatestReleaseVersion(owner, repo, token = '') {
  * @returns {Promise<string[]>} Array of release tags
  */
 async function getAllReleaseTags(owner, repo, token = '') {
-  const url = `https://api.github.com/repos/${owner}/${repo}/releases`;
+  const apiUrl = process.env.GITHUB_API_URL || 'https://api.github.com';
+  const url = `${apiUrl}/repos/${owner}/${repo}/releases`;
   const headers = token ? { Authorization: `token ${token}` } : {};
   const response = await makeRequest(url, { headers });
   return response.map(r => r.tag_name);
@@ -142,7 +144,8 @@ function bumpVersion(version, bumpType) {
  * @param {string} token GitHub Token
  */
 async function createRelease(owner, repo, newVersion, token) {
-  const url = `https://api.github.com/repos/${owner}/${repo}/releases`;
+  const apiUrl = process.env.GITHUB_API_URL || 'https://api.github.com';
+  const url = `${apiUrl}/repos/${owner}/${repo}/releases`;
   const headers = { 
     Authorization: `token ${token}`,
     'Content-Type': 'application/json'
