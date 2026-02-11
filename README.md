@@ -43,6 +43,8 @@ This project automatically checks GitHub release versions and bumps the version 
 - Extract the version ID by removing the suffix
 - Create new releases with the suffix appended to the version
 
+**create-release**: (Optional, default: `'true'`) Whether to automatically create a GitHub release after bumping the version. Set to `'false'` to only calculate and output the bumped version without creating a release. This is useful when you want to use the bumped version in subsequent workflow steps but handle release creation separately.
+
 > **Note**: The `version` output always contains the pure version ID without prefix/suffix. For example, if the release name is `cuda_1.3.0`, the output will be `1.3.0`.
 
 ### Example: Using in a GitHub Actions Workflow
@@ -113,6 +115,25 @@ Combining prefix and suffix:
     prefix: 'v'
     suffix: '-rc'
     # This will look for releases like 'v1.3.0-rc' and create 'v1.4.0-rc'
+```
+
+#### Example: Version Calculation Only (No Release Creation)
+
+If you want to calculate the next version without automatically creating a release, set `create-release: 'false'`:
+
+```yaml
+- name: Calculate next version
+  id: bump
+  uses: jianlins/check_bump_version@v2
+  with:
+    bump-type: 'patch'
+    create-release: 'false'
+    # Only calculates the version, does not create a release
+
+- name: Use the version elsewhere
+  run: |
+    echo "Next version would be: ${{ steps.bump.outputs.version }}"
+    # You can use this version for other purposes like updating package.json, etc.
 ```
 
 #### Real-world Example with Release Creation

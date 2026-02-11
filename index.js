@@ -296,11 +296,16 @@ async function main() {
       console.log(`::set-output name=version::${chosenVersion}`);
     }
 
-    if (token) {
+    if (token && shouldCreateRelease) {
       const releaseUrl = await createRelease(owner, repo, fullReleaseName, token);
       console.log(`New release created: ${releaseUrl}`);
       if (prefix || suffix) {
         console.log(`Release name: ${fullReleaseName}, Version ID: ${chosenVersion}`);
+      }
+    } else if (!shouldCreateRelease) {
+      console.log('Release creation is disabled (create-release: false).');
+      if (prefix || suffix) {
+        console.log(`Would create release: ${fullReleaseName}, Version ID: ${chosenVersion}`);
       }
     } else {
       console.log('GitHub Token not provided, release not created automatically.');

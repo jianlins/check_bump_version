@@ -41,6 +41,8 @@
 - 通过移除后缀来提取版本号
 - 创建新 release 时自动添加后缀
 
+**create-release**：（可选，默认值：`'true'`）是否在版本提升后自动创建 GitHub release。设置为 `'false'` 则只计算并输出提升后的版本号，不创建 release。当你需要在后续工作流步骤中使用版本号但想单独处理 release 创建时，此参数非常有用。
+
 > **注意**：`version` 输出始终只包含纯版本号，不含前缀/后缀。例如，如果 release 名称为 `cuda_1.3.0`，输出将是 `1.3.0`。
 
 ### 示例：在 GitHub Actions 工作流中使用
@@ -111,6 +113,25 @@ jobs:
     prefix: 'v'
     suffix: '-rc'
     # 这将查找类似 'v1.3.0-rc' 的 release 并创建 'v1.4.0-rc'
+```
+
+#### 仅计算版本号（不创建 Release）
+
+如果你只想计算下一个版本号而不自动创建 release，设置 `create-release: 'false'`：
+
+```yaml
+- name: 计算下一个版本
+  id: bump
+  uses: jianlins/check_bump_version@v2
+  with:
+    bump-type: 'patch'
+    create-release: 'false'
+    # 仅计算版本号，不创建 release
+
+- name: 在其他地方使用版本号
+  run: |
+    echo "下一个版本号是: ${{ steps.bump.outputs.version }}"
+    # 你可以将此版本号用于其他用途，如更新 package.json 等
 ```
 
 #### 包含发布创建的实际示例
