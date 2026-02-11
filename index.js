@@ -207,15 +207,17 @@ async function main() {
   }
   owner = owner || 'octocat';
   repo = repo || 'Hello-World';
-  const bumpType = process.env.BUMP_TYPE || process.env['INPUT_BUMP-TYPE'] || 'patch';
+  const bumpType = process.env.BUMP_TYPE || process.env['INPUT_BUMP_TYPE'] || process.env['INPUT_BUMP-TYPE'] || 'patch';
   const token = process.env.GITHUB_TOKEN || '';
-  // Support both SET_VERSION and INPUT_CURRENT-VERSION (from workflow input)
-  const setVersion = process.env.SET_VERSION || process.env['INPUT_CURRENT-VERSION'];
+  // Support both SET_VERSION and INPUT_CURRENT_VERSION (from workflow input)
+  // Note: GitHub Actions converts hyphens to underscores in env var names
+  const setVersion = process.env.SET_VERSION || process.env['INPUT_CURRENT_VERSION'] || process.env['INPUT_CURRENT-VERSION'];
   // Get prefix and suffix parameters
   const prefix = process.env.PREFIX || process.env['INPUT_PREFIX'] || '';
   const suffix = process.env.SUFFIX || process.env['INPUT_SUFFIX'] || '';
   // Get create-release parameter (defaults to 'true')
-  const createReleaseInput = process.env.CREATE_RELEASE || process.env['INPUT_CREATE-RELEASE'] || 'true';
+  // Note: GitHub Actions converts 'create-release' input to 'INPUT_CREATE_RELEASE' env var
+  const createReleaseInput = process.env.CREATE_RELEASE || process.env['INPUT_CREATE_RELEASE'] || process.env['INPUT_CREATE-RELEASE'] || 'true';
   const shouldCreateRelease = createReleaseInput.toLowerCase() === 'true';
 
   try {
